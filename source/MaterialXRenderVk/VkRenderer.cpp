@@ -8,6 +8,7 @@
 #include <MaterialXRender/TinyObjLoader.h>
 #include <MaterialXRender/CgltfLoader.h>
 #include <MaterialXGenShader/HwShaderGenerator.h>
+#include <MaterialXFormat/Util.h>
 #include <iostream>
 #include <chrono>
 #include <thread>
@@ -134,11 +135,19 @@ void VkRenderer::initialize(RenderContextHandle)
         
         createFrameBuffer(true);
 
-        /// Create DepthBuffer
-        
-         //Create a default program
-         //createProgram(nullptr);
-        _geometryHandler->loadGeometry("F:/source/MaterialX/resources/Geometry/teapot.obj");
+
+        FileSearchPath searchPath = getDefaultDataSearchPath();
+        FilePath teapotRel = FilePath("resources/Geometry/teapot.obj");
+        FilePath teapotPath = searchPath.find(teapotRel);
+        if (teapotPath.isEmpty())
+        {
+            teapotPath = FilePath::getCurrentPath() / teapotRel;
+        }
+
+        if (!teapotPath.isEmpty())
+        {
+            _geometryHandler->loadGeometry(teapotPath);
+        }
 
         _initialized = true;
         auto checkerPixels = generateCheckeredPattern8x8();
@@ -147,7 +156,7 @@ void VkRenderer::initialize(RenderContextHandle)
         desc.width = 64;
         desc.height = 64;
         desc.channelCount = 4; // RGBA
-        desc.mipCount = static_cast<uint32_t>(std::floor(std::log2(std::max(desc.width, desc.height)))) + 1; ///Fixed!
+        desc.mipCount = static_cast<uint32_t>(std::floor(std::log2(std::max(desc.width, desc.height)))) + 1; 
         desc.rowStride = desc.width * desc.channelCount; 
         desc.elementSize = 1;                          
         desc.isFloat = false;

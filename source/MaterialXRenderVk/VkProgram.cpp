@@ -282,7 +282,7 @@ Matrix44 VkProgram::convertGlmToMatrix44(const glm::mat4& glmMat)
 
 void VkProgram::bindViewInformation(CameraPtr camera)
 {
-    float scaleFactor = 2.5f;
+    float scaleFactor = 0.5f;
     static int meshIndex = 0;
     glm::vec3 offset = glm::vec3(meshIndex * 20.0f, 2.0f, 2.0f); 
     float angleX = glm::radians(-45.0);
