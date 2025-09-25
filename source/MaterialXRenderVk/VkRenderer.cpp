@@ -53,7 +53,7 @@ const float FAR_PLANE_PERSP = 100.0f;
 
 static std::vector<uint8_t> generateCheckeredPattern8x8()
 {
-    const uint32_t width = 64;  // Make texture larger for less pixelation
+    const uint32_t width = 64; 
     const uint32_t height = 64;
     std::vector<uint8_t> pixels(width * height * 4); // RGBA8
 
@@ -165,10 +165,10 @@ void VkRenderer::initialize(RenderContextHandle)
        _checkeredTexture = VkTexture::create(_vkDevice);
 
         bool success = _checkeredTexture->initialize(
-            desc,               
+            desc,
             checkerPixels.data(),
-            false,                
-            false                 
+            true,
+            true
         );
 
         
@@ -358,16 +358,6 @@ void VkRenderer::prepareMeshBuffers()
         {
             texCoordData = texCoordStream->getData();
             std::cout << "Mesh " << mesh->getName() << " has texture coordinates, count: " << texCoordData.size() << std::endl;
-            
-            // Fix invalid UV coordinates that are outside 0-1 range, this is to solve the problem for the cube which is not in 0-1 range. Still not working correctly
-            for (size_t i = 0; i < texCoordData.size(); i += 2) {
-                texCoordData[i] = std::fmod(texCoordData[i], 1.0f);         // U coordinate
-                texCoordData[i + 1] = std::fmod(texCoordData[i + 1], 1.0f); // V coordinate
-                
-                if (texCoordData[i] < 0.0f) texCoordData[i] += 1.0f;
-                if (texCoordData[i + 1] < 0.0f) texCoordData[i + 1] += 1.0f;
-            }
-            std::cout << "Fixed UV coordinates to 0-1 range" << std::endl;
         }
         else 
         {

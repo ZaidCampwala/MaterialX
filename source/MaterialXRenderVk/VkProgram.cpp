@@ -346,9 +346,9 @@ bool VkProgram::build(const std::string& vertexShaderText,
         { _fragmentShaderModule, nullptr },
         sizeof(float) * 8, 
         {
-            { vk::Format::eR32G32B32Sfloat, 0 },  // position offset
-            { vk::Format::eR32G32B32Sfloat, 24 }, // normal offset
-            { vk::Format::eR32G32Sfloat, 40 }     // uv offset
+            { vk::Format::eR32G32B32Sfloat, 0 },   // position offset (12 bytes)
+            { vk::Format::eR32G32B32Sfloat, 12 },  // normal offset   (+12)
+            { vk::Format::eR32G32Sfloat, 24 }      // uv offset       (+8)
         },
         frontFace,
         enableDepthTest,

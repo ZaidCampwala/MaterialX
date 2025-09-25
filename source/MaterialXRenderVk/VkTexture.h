@@ -113,7 +113,8 @@ class MX_RENDERVK_API VkTexture
     void copyBufferToImage(vk::Buffer buffer,
                            vk::Image image,
                            uint32_t width,
-                           uint32_t height);
+                           uint32_t height,
+                           uint32_t bufferRowLengthTexels = 0);
 
     void generateMipmaps(vk::Image image,
                          vk::Format imageFormat,

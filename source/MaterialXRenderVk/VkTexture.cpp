@@ -102,7 +102,8 @@ bool VkTexture::createImage(const ImageDesc& imageDesc, const void* pixelData, b
     _imageMemory = _device->GetDevice().allocateMemory(allocInfo);
     _device->GetDevice().bindImageMemory(_image, _imageMemory, 0);
 
-    vk::DeviceSize imageSize = imageDesc.width * imageDesc.height * 4;
+    uint32_t bytesPerPixel = imageDesc.channelCount * imageDesc.elementSize;
+    vk::DeviceSize imageSize = (imageDesc.rowStride ? imageDesc.rowStride : imageDesc.width * bytesPerPixel) * imageDesc.height;
 
     auto stagingBufferData = _device->createBuffer(
         imageSize,
@@ -115,7 +116,8 @@ bool VkTexture::createImage(const ImageDesc& imageDesc, const void* pixelData, b
 
     transitionImageLayout(_image, _format, vk::ImageLayout::eUndefined, vk::ImageLayout::eTransferDstOptimal, _mipLevels);
 
-    copyBufferToImage(stagingBufferData.buffer, _image, _width, _height);
+    uint32_t bufferRowLengthTexels = imageDesc.rowStride ? (imageDesc.rowStride / bytesPerPixel) : 0;
+    copyBufferToImage(stagingBufferData.buffer, _image, _width, _height, bufferRowLengthTexels);
 
     if (generateMipMaps)
     {
@@ -164,13 +166,14 @@ bool VkTexture::createSampler()
     samplerInfo.compareEnable = VK_FALSE;
     samplerInfo.mipmapMode = vk::SamplerMipmapMode::eLinear;
     samplerInfo.minLod = 0.0f;
-    samplerInfo.maxLod = static_cast<float>(_mipLevels);
+    samplerInfo.maxLod = _mipLevels > 0 ? static_cast<float>(_mipLevels - 1) : 0.0f;
     samplerInfo.mipLodBias = 0.0f;
 
     if (supportedFeatures.samplerAnisotropy)
     {
+        auto limits = _device->GetPhysicalDevice().getProperties().limits;
         samplerInfo.anisotropyEnable = VK_TRUE;
-        samplerInfo.maxAnisotropy = 16.0f;
+        samplerInfo.maxAnisotropy = std::min(16.0f, limits.maxSamplerAnisotropy);
     }
     else
     {
@@ -250,13 +253,14 @@ void VkTexture::transitionImageLayout(vk::Image image,
 void VkTexture::copyBufferToImage(vk::Buffer buffer,
                                   vk::Image image,
                                   uint32_t width,
-                                  uint32_t height)
+                                  uint32_t height,
+                                  uint32_t bufferRowLengthTexels)
 {
     vk::CommandBuffer commandBuffer = _device->BeginSingleTimeCommands();
 
     vk::BufferImageCopy region{};
     region.bufferOffset = 0;
-    region.bufferRowLength = 0; 
+    region.bufferRowLength = bufferRowLengthTexels; 
     region.bufferImageHeight = 0;
 
     region.imageSubresource.aspectMask = vk::ImageAspectFlagBits::eColor;
